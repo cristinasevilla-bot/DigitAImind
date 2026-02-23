@@ -1,12 +1,19 @@
 {
-  "name": "nlt-wa-webhook",
-  "version": "1.0.0",
-  "main": "index.js",
+  "name": "whatsapp-booking-bot",
+  "version": "2.0.0",
+  "description": "Bot genérico de reservas por WhatsApp con IA y Google Calendar",
   "type": "module",
+  "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "node --watch index.js"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.18.2",
+    "openai": "^4.28.0",
+    "googleapis": "^131.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
