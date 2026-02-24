@@ -147,10 +147,23 @@ app.get("/auth/callback", async (req, res) => {
 // ENDPOINT DE TESTING
 // ============================================================
 app.post("/test", async (req, res) => {
-  const { from = "34600000000", message } = req.body;
+  const { from = "admin-test", message } = req.body;
   if (!message) return res.status(400).json({ error: "Falta el campo message" });
-  res.json({ status: "processing" });
-  await handleMessage(from, message);
+
+  // Interceptar la respuesta del bot para devolverla al dashboard
+  const originalSend = sendWhatsAppMessage;
+  let botReply = null;
+
+  // Sobrescribir temporalmente para capturar la respuesta
+  const tempSend = async (to, text) => {
+    botReply = text;
+    console.log(`📤 [TEST - para ${to}]: ${text}`);
+  };
+
+  // Ejecutar con función interceptada
+  await handleMessageWithSend(from, message, tempSend);
+
+  res.json({ status: "ok", reply: botReply || "Sin respuesta" });
 });
 
 // ============================================================
@@ -199,6 +212,10 @@ app.post("/webhook", async (req, res) => {
 // LÓGICA PRINCIPAL - MANEJO DE MENSAJES CON IA
 // ============================================================
 async function handleMessage(from, userMessage) {
+  await handleMessageWithSend(from, userMessage, sendWhatsAppMessage);
+}
+
+async function handleMessageWithSend(from, userMessage, sendFn) {
   if (!userSessions.has(from)) {
     userSessions.set(from, { messages: [], pendingDate: null, pendingTime: null, pendingService: null });
   }
@@ -273,12 +290,12 @@ async function handleMessage(from, userMessage) {
     const reply = secondResponse.choices[0].message.content;
     session.messages.push({ role: "assistant", content: reply });
     if (session.messages.length > 20) session.messages = session.messages.slice(-20);
-    await sendWhatsAppMessage(from, reply);
+    await sendFn(from, reply);
   } else {
     const reply = choice.message.content;
     session.messages.push({ role: "assistant", content: reply });
     if (session.messages.length > 20) session.messages = session.messages.slice(-20);
-    await sendWhatsAppMessage(from, reply);
+    await sendFn(from, reply);
   }
 }
 
