@@ -6,7 +6,6 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
 const app = express();
 app.use(express.json());
 
@@ -16,35 +15,32 @@ app.use(express.json());
 const BUSINESS_CONFIG = {
   name: process.env.BUSINESS_NAME || "Mi Negocio",
   services: (process.env.BUSINESS_SERVICES || "consulta,cita,reserva").split(","),
-  slotDuration: Number(process.env.SLOT_DURATION_MINUTES) || 30, // minutos por cita
-  advanceDays: Number(process.env.ADVANCE_DAYS) || 1, // días mínimos de antelación
+  slotDuration: Number(process.env.SLOT_DURATION_MINUTES) || 30,
+  advanceDays: Number(process.env.ADVANCE_DAYS) || 1,
   workingHours: {
     start: process.env.WORKING_HOURS_START || "09:00",
     end: process.env.WORKING_HOURS_END || "20:00",
   },
-  workingDays: (process.env.WORKING_DAYS || "1,2,3,4,5").split(",").map(Number), // 1=Lunes...7=Domingo
+  workingDays: (process.env.WORKING_DAYS || "1,2,3,4,5").split(",").map(Number),
   timezone: process.env.TIMEZONE || "Europe/Madrid",
 };
 
 // ============================================================
-// ESTADO EN MEMORIA (en producción usar Redis o BD)
+// ESTADO EN MEMORIA
 // ============================================================
 const userSessions = new Map();
-// Estructura de sesión: { messages: [], pendingDate: null, pendingTime: null, pendingService: null }
 
 // ============================================================
 // CLIENTES API
 // ============================================================
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Google Calendar OAuth2 - se inicializa en cada llamada para evitar problemas de credenciales
 function getCalendarClient() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const redirectUri = process.env.GOOGLE_REDIRECT_URI;
   const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
 
-  // Debug: verificar que las credenciales están presentes
   console.log("🔑 Google credentials check:", {
     clientId: clientId ? `✅ (${clientId.slice(0, 10)}...)` : "❌ MISSING",
     clientSecret: clientSecret ? `✅ (${clientSecret.slice(0, 6)}...)` : "❌ MISSING",
@@ -63,7 +59,55 @@ function getCalendarClient() {
 app.get("/", (req, res) => res.status(200).send(`${BUSINESS_CONFIG.name} Bot ✅`));
 
 // ============================================================
-// GOOGLE OAUTH - OBTENER REFRESH TOKEN FÁCILMENTE
+// DASHBOARD ADMIN
+// ============================================================
+app.get("/admin", (req, res) => {
+  try {
+    const html = readFileSync(join(__dirname, "dashboard.html"), "utf8");
+    res.send(html);
+  } catch {
+    res.status(404).send("Dashboard no encontrado");
+  }
+});
+
+app.get("/admin/stats", (req, res) => {
+  res.json({
+    activeSessions: userSessions.size,
+    bookingsToday: null,
+    bookingsWeek: null,
+  });
+});
+
+app.get("/admin/bookings", async (req, res) => {
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const startOfDay = new Date(`${today}T00:00:00`);
+    const endOfDay = new Date(`${today}T23:59:59`);
+
+    const response = await getCalendarClient().events.list({
+      calendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
+      timeMin: startOfDay.toISOString(),
+      timeMax: endOfDay.toISOString(),
+      singleEvents: true,
+      orderBy: "startTime",
+    });
+
+    const bookings = (response.data.items || []).map(e => ({
+      time: new Date(e.start.dateTime).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+      clientName: e.summary?.split(" - ")[1]?.split(" (")[0] || "Cliente",
+      service: e.summary?.split(" - ")[0] || e.summary,
+      eventId: e.id,
+    }));
+
+    res.json({ bookings, weekTotal: null });
+  } catch (e) {
+    console.error("Admin bookings error:", e.message);
+    res.json({ bookings: [], weekTotal: null });
+  }
+});
+
+// ============================================================
+// GOOGLE OAUTH - OBTENER REFRESH TOKEN
 // ============================================================
 app.get("/auth/google", (req, res) => {
   const auth = new google.auth.OAuth2(
@@ -100,115 +144,13 @@ app.get("/auth/callback", async (req, res) => {
 });
 
 // ============================================================
-// DASHBOARD ADMIN
-// ============================================================
-import { readFileSync } from "fs";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-app.get("/admin", (req, res) => {
-  try {
-    const html = readFileSync(join(__dirname, "dashboard.html"), "utf8");
-    res.send(html);
-  } catch {
-    res.status(404).send("Dashboard no encontrado");
-  }
-});
-
-app.get("/admin/stats", (req, res) => {
-  res.json({
-    activeSessions: userSessions.size,
-    bookingsToday: null,
-    bookingsWeek: null,
-  });
-});
-
-app.get("/admin/bookings", async (req, res) => {
-  try {
-    const today = new Date().toISOString().split("T")[0];
-    const startOfDay = new Date(`${today}T00:00:00`);
-    const endOfDay = new Date(`${today}T23:59:59`);
-
-    const response = await getCalendarClient().events.list({
-      calendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
-      timeMin: startOfDay.toISOString(),
-      timeMax: endOfDay.toISOString(),
-      singleEvents: true,
-      orderBy: "startTime",
-    });
-
-    const bookings = (response.data.items || []).map(e => ({
-      time: new Date(e.start.dateTime).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
-      clientName: e.summary?.split(" - ")[1]?.split(" (")[0] || "Cliente",
-      service: e.summary?.split(" - ")[0] || e.summary,
-      eventId: e.id,
-    }));
-
-    res.json({ bookings, weekTotal: null });
-  } catch (e) {
-    console.error("Admin bookings error:", e.message);
-    res.json({ bookings: [], weekTotal: null });
-  }
-});
-
-// ============================================================
-// ENDPOINT DE TESTING (solo para desarrollo)
+// ENDPOINT DE TESTING
 // ============================================================
 app.post("/test", async (req, res) => {
   const { from = "34600000000", message } = req.body;
   if (!message) return res.status(400).json({ error: "Falta el campo message" });
   res.json({ status: "processing" });
   await handleMessage(from, message);
-});
-
-// ============================================================
-// DASHBOARD ADMIN
-// ============================================================
-app.get("/admin", (req, res) => {
-  try {
-    const html = readFileSync(join(__dirname, "dashboard.html"), "utf8");
-    res.send(html);
-  } catch {
-    res.status(404).send("Dashboard no encontrado");
-  }
-});
-
-app.get("/admin/stats", (req, res) => {
-  res.json({
-    activeSessions: userSessions.size,
-    bookingsToday: null,
-    bookingsWeek: null,
-  });
-});
-
-app.get("/admin/bookings", async (req, res) => {
-  try {
-    const today = new Date().toISOString().split("T")[0];
-    const startOfDay = new Date(`${today}T00:00:00`);
-    const endOfDay = new Date(`${today}T23:59:59`);
-
-    const response = await getCalendarClient().events.list({
-      calendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
-      timeMin: startOfDay.toISOString(),
-      timeMax: endOfDay.toISOString(),
-      singleEvents: true,
-      orderBy: "startTime",
-    });
-
-    const bookings = (response.data.items || []).map(e => ({
-      time: new Date(e.start.dateTime).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
-      clientName: e.summary?.split(" - ")[1]?.split(" (")[0] || "Cliente",
-      service: e.summary?.split(" - ")[0] || e.summary,
-      eventId: e.id,
-    }));
-
-    res.json({ bookings, weekTotal: null });
-  } catch (e) {
-    console.error("Admin bookings error:", e.message);
-    res.json({ bookings: [], weekTotal: null });
-  }
 });
 
 // ============================================================
@@ -232,7 +174,7 @@ app.get("/webhook", (req, res) => {
 // ============================================================
 app.post("/webhook", async (req, res) => {
   try {
-    res.sendStatus(200); // Responder rápido a Meta
+    res.sendStatus(200);
 
     const body = req.body;
     if (body.object !== "whatsapp_business_account") return;
@@ -243,11 +185,10 @@ app.post("/webhook", async (req, res) => {
 
     if (!message || message.type !== "text") return;
 
-    const from = message.from; // número del usuario
+    const from = message.from;
     const text = message.text.body.trim();
 
     console.log(`📩 [${from}]: ${text}`);
-
     await handleMessage(from, text);
   } catch (e) {
     console.error("WEBHOOK ERROR:", e);
@@ -258,34 +199,24 @@ app.post("/webhook", async (req, res) => {
 // LÓGICA PRINCIPAL - MANEJO DE MENSAJES CON IA
 // ============================================================
 async function handleMessage(from, userMessage) {
-  // Obtener o crear sesión
   if (!userSessions.has(from)) {
     userSessions.set(from, { messages: [], pendingDate: null, pendingTime: null, pendingService: null });
   }
   const session = userSessions.get(from);
-
-  // Añadir mensaje del usuario al historial
   session.messages.push({ role: "user", content: userMessage });
 
-  // Contexto del sistema para la IA
-  const systemPrompt = buildSystemPrompt(session);
+  const systemPrompt = buildSystemPrompt();
 
-  // Llamar a OpenAI
   const aiResponse = await openai.chat.completions.create({
     model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: systemPrompt },
-      ...session.messages,
-    ],
+    messages: [{ role: "system", content: systemPrompt }, ...session.messages],
     functions: [
       {
         name: "check_availability",
         description: "Consulta los slots disponibles en Google Calendar para una fecha concreta",
         parameters: {
           type: "object",
-          properties: {
-            date: { type: "string", description: "Fecha en formato YYYY-MM-DD" },
-          },
+          properties: { date: { type: "string", description: "Fecha en formato YYYY-MM-DD" } },
           required: ["date"],
         },
       },
@@ -321,65 +252,40 @@ async function handleMessage(from, userMessage) {
 
   const choice = aiResponse.choices[0];
 
-  // Si la IA quiere llamar a una función
   if (choice.finish_reason === "function_call") {
     const fnName = choice.message.function_call.name;
     const fnArgs = JSON.parse(choice.message.function_call.arguments);
-
     console.log(`🔧 Función: ${fnName}`, fnArgs);
 
     let fnResult;
-    if (fnName === "check_availability") {
-      fnResult = await checkAvailability(fnArgs.date);
-    } else if (fnName === "create_booking") {
-      fnResult = await createBooking(fnArgs, from);
-    } else if (fnName === "cancel_booking") {
-      fnResult = await cancelBooking(fnArgs, from);
-    }
+    if (fnName === "check_availability") fnResult = await checkAvailability(fnArgs.date);
+    else if (fnName === "create_booking") fnResult = await createBooking(fnArgs, from);
+    else if (fnName === "cancel_booking") fnResult = await cancelBooking(fnArgs, from);
 
-    // Añadir resultado de la función al historial
     session.messages.push(choice.message);
-    session.messages.push({
-      role: "function",
-      name: fnName,
-      content: JSON.stringify(fnResult),
-    });
+    session.messages.push({ role: "function", name: fnName, content: JSON.stringify(fnResult) });
 
-    // Segunda llamada a la IA con el resultado
     const secondResponse = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...session.messages,
-      ],
+      messages: [{ role: "system", content: systemPrompt }, ...session.messages],
     });
 
     const reply = secondResponse.choices[0].message.content;
     session.messages.push({ role: "assistant", content: reply });
-
-    // Limpiar historial si es muy largo (últimos 20 mensajes)
-    if (session.messages.length > 20) {
-      session.messages = session.messages.slice(-20);
-    }
-
+    if (session.messages.length > 20) session.messages = session.messages.slice(-20);
     await sendWhatsAppMessage(from, reply);
   } else {
-    // Respuesta directa de la IA
     const reply = choice.message.content;
     session.messages.push({ role: "assistant", content: reply });
-
-    if (session.messages.length > 20) {
-      session.messages = session.messages.slice(-20);
-    }
-
+    if (session.messages.length > 20) session.messages = session.messages.slice(-20);
     await sendWhatsAppMessage(from, reply);
   }
 }
 
 // ============================================================
-// SYSTEM PROMPT DINÁMICO
+// SYSTEM PROMPT
 // ============================================================
-function buildSystemPrompt(session) {
+function buildSystemPrompt() {
   const today = new Date().toLocaleDateString("es-ES", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
     timeZone: BUSINESS_CONFIG.timezone,
@@ -399,7 +305,7 @@ ANTELACIÓN MÍNIMA: ${BUSINESS_CONFIG.advanceDays} día(s)
 INSTRUCCIONES:
 - Sé amable, breve y directo. Usa emojis con moderación.
 - Si el usuario quiere reservar, primero pregunta qué servicio y para qué fecha/hora preferirían.
-- Usa la función check_availability para consultar huecos reales antes de confirmar.
+- Usa check_availability para consultar huecos reales antes de confirmar.
 - Usa create_booking solo cuando el usuario haya confirmado explícitamente.
 - Si necesitas el nombre del cliente para la reserva, pregúntalo.
 - Si el usuario quiere cancelar, usa cancel_booking.
@@ -428,10 +334,7 @@ async function checkAvailability(dateISO) {
       end: e.end.dateTime,
     }));
 
-    // Generar todos los slots del día
-    const allSlots = generateSlots(dateISO);
-
-    // Filtrar slots ocupados
+    const allSlots = generateSlots();
     const availableSlots = allSlots.filter((slot) => {
       const slotStart = new Date(`${dateISO}T${slot}:00`);
       const slotEnd = new Date(slotStart.getTime() + BUSINESS_CONFIG.slotDuration * 60000);
@@ -445,8 +348,7 @@ async function checkAvailability(dateISO) {
     return { date: dateISO, availableSlots, totalSlots: allSlots.length };
   } catch (e) {
     console.error("Google Calendar error:", e.message);
-    // Fallback: devolver slots sin consultar calendario (demo sin credenciales)
-    return { date: dateISO, availableSlots: generateSlots(dateISO), note: "demo_mode" };
+    return { date: dateISO, availableSlots: generateSlots(), note: "demo_mode" };
   }
 }
 
@@ -473,7 +375,6 @@ async function createBooking({ date, time, service, clientName }, from) {
     return { success: true, eventId: result.data.id, date, time, service };
   } catch (e) {
     console.error("Create booking error:", e.message);
-    // Fallback demo
     return { success: true, eventId: "demo-" + Date.now(), date, time, service, note: "demo_mode" };
   }
 }
@@ -517,7 +418,6 @@ async function sendWhatsAppMessage(to, text) {
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
   if (!token || !phoneNumberId) {
-    // MODO DEMO: solo log en consola
     console.log(`📤 [DEMO - para ${to}]: ${text}`);
     return;
   }
@@ -546,7 +446,7 @@ async function sendWhatsAppMessage(to, text) {
 // ============================================================
 // HELPERS - GENERADOR DE SLOTS
 // ============================================================
-function generateSlots(dateISO) {
+function generateSlots() {
   const slots = [];
   const start = toMinutes(BUSINESS_CONFIG.workingHours.start);
   const end = toMinutes(BUSINESS_CONFIG.workingHours.end);
