@@ -58,6 +58,43 @@ function getCalendarClient() {
 app.get("/", (req, res) => res.status(200).send(`${BUSINESS_CONFIG.name} Bot ✅`));
 
 // ============================================================
+// GOOGLE OAUTH - OBTENER REFRESH TOKEN FÁCILMENTE
+// ============================================================
+app.get("/auth/google", (req, res) => {
+  const auth = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    `${process.env.APP_URL}/auth/callback`
+  );
+  const url = auth.generateAuthUrl({
+    access_type: "offline",
+    prompt: "consent",
+    scope: ["https://www.googleapis.com/auth/calendar"],
+  });
+  res.redirect(url);
+});
+
+app.get("/auth/callback", async (req, res) => {
+  const { code } = req.query;
+  if (!code) return res.send("Error: no code received");
+
+  const auth = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    `${process.env.APP_URL}/auth/callback`
+  );
+
+  const { tokens } = await auth.getToken(code);
+  console.log("🎉 TOKENS OBTENIDOS:", JSON.stringify(tokens, null, 2));
+
+  res.send(`
+    <h2>✅ Autorización completada</h2>
+    <p>Copia este Refresh Token y ponlo en Render como <strong>GOOGLE_REFRESH_TOKEN</strong>:</p>
+    <textarea rows="4" cols="80">${tokens.refresh_token || "No se generó refresh token - vuelve a intentarlo"}</textarea>
+  `);
+});
+
+// ============================================================
 // WHATSAPP WEBHOOK VERIFICATION
 // ============================================================
 app.get("/webhook", (req, res) => {
