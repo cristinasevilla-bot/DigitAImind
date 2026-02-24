@@ -56,7 +56,16 @@ function getCalendarClient() {
 // HEALTH CHECK
 // ============================================================
 app.get("/", (req, res) => res.status(200).send(`${BUSINESS_CONFIG.name} Bot ✅`));
-
+app.get("/test-calendar", async (req, res) => {
+  try {
+    const calendar = getCalendarClient();
+    const response = await calendar.calendarList.list();
+    res.json(response.data);
+  } catch (e) {
+    console.error("Test calendar error:", e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
 // ============================================================
 // GOOGLE OAUTH - OBTENER REFRESH TOKEN FÁCILMENTE
 // ============================================================
