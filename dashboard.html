@@ -613,7 +613,7 @@
     <div class="test-panel">
       <div class="card-header">
         <div class="card-title">🧪 Test del bot</div>
-        <div class="card-badge">simulador</div>
+        <div class="card-badge" onclick="resetChat()" style="cursor:pointer">↺ reiniciar</div>
       </div>
       <div class="test-messages" id="test-messages">
         <div class="msg msg-bot">Hola! Soy el bot de reservas. ¿En qué puedo ayudarte?</div>
@@ -726,6 +726,16 @@
   // ============================================================
   // TEST BOT
   // ============================================================
+  function resetChat() {
+    document.getElementById("test-messages").innerHTML =
+      '<div class="msg msg-bot">Hola! Soy el bot de reservas. ¿En qué puedo ayudarte?</div>';
+    fetch(`${BOT_URL}/test/reset`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ from: "admin-test" }),
+    });
+  }
+
   async function sendTest() {
     const input = document.getElementById("test-input");
     const msg = input.value.trim();
