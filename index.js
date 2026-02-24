@@ -66,6 +66,30 @@ app.get("/test-calendar", async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+app.get("/test-create", async (req, res) => {
+  try {
+    const calendar = getCalendarClient();
+
+    const now = new Date();
+    const end = new Date(now.getTime() + 30 * 60000);
+
+    const event = {
+      summary: "Test desde Render",
+      start: { dateTime: now.toISOString(), timeZone: "Europe/Madrid" },
+      end: { dateTime: end.toISOString(), timeZone: "Europe/Madrid" },
+    };
+
+    const result = await calendar.events.insert({
+      calendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
+      resource: event,
+    });
+
+    res.json({ success: true, eventId: result.data.id });
+  } catch (e) {
+    console.error("Create test error:", e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
 // ============================================================
 // GOOGLE OAUTH - OBTENER REFRESH TOKEN FÁCILMENTE
 // ============================================================
