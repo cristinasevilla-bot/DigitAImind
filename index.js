@@ -32,16 +32,25 @@ const userSessions = new Map();
 // ============================================================
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Google Calendar OAuth2
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI
-);
-oauth2Client.setCredentials({
-  refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-});
-const calendar = google.calendar({ version: "v3", auth: oauth2Client });
+// Google Calendar OAuth2 - se inicializa en cada llamada para evitar problemas de credenciales
+function getCalendarClient() {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+
+  // Debug: verificar que las credenciales están presentes
+  console.log("🔑 Google credentials check:", {
+    clientId: clientId ? `✅ (${clientId.slice(0, 10)}...)` : "❌ MISSING",
+    clientSecret: clientSecret ? `✅ (${clientSecret.slice(0, 6)}...)` : "❌ MISSING",
+    redirectUri: redirectUri ? `✅ ${redirectUri}` : "❌ MISSING",
+    refreshToken: refreshToken ? `✅ (${refreshToken.slice(0, 10)}...)` : "❌ MISSING",
+  });
+
+  const auth = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+  auth.setCredentials({ refresh_token: refreshToken });
+  return google.calendar({ version: "v3", auth });
+}
 
 // ============================================================
 // HEALTH CHECK
@@ -252,7 +261,7 @@ async function checkAvailability(dateISO) {
     const startOfDay = new Date(`${dateISO}T${BUSINESS_CONFIG.workingHours.start}:00`);
     const endOfDay = new Date(`${dateISO}T${BUSINESS_CONFIG.workingHours.end}:00`);
 
-    const response = await calendar.events.list({
+    const response = await getCalendarClient().events.list({
       calendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
       timeMin: startOfDay.toISOString(),
       timeMax: endOfDay.toISOString(),
@@ -302,7 +311,7 @@ async function createBooking({ date, time, service, clientName }, from) {
       end: { dateTime: endDateTime.toISOString(), timeZone: BUSINESS_CONFIG.timezone },
     };
 
-    const result = await calendar.events.insert({
+    const result = await getCalendarClient().events.insert({
       calendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
       resource: event,
     });
@@ -323,18 +332,18 @@ async function cancelBooking({ date, time }, from) {
     const startDateTime = new Date(`${date}T${time}:00`);
     const endDateTime = new Date(startDateTime.getTime() + BUSINESS_CONFIG.slotDuration * 60000);
 
-    const response = await calendar.events.list({
+    const response = await getCalendarClient().events.list({
       calendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
       timeMin: startDateTime.toISOString(),
       timeMax: endDateTime.toISOString(),
-      q: from, // buscar por número de teléfono
+      q: from,
       singleEvents: true,
     });
 
     const event = response.data.items?.[0];
     if (!event) return { success: false, message: "No se encontró la reserva" };
 
-    await calendar.events.delete({
+    await getCalendarClient().events.delete({
       calendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
       eventId: event.id,
     });
