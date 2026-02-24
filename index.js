@@ -1,6 +1,11 @@
 import express from "express";
 import OpenAI from "openai";
 import { google } from "googleapis";
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 app.use(express.json());
@@ -56,40 +61,7 @@ function getCalendarClient() {
 // HEALTH CHECK
 // ============================================================
 app.get("/", (req, res) => res.status(200).send(`${BUSINESS_CONFIG.name} Bot ✅`));
-app.get("/test-calendar", async (req, res) => {
-  try {
-    const calendar = getCalendarClient();
-    const response = await calendar.calendarList.list();
-    res.json(response.data);
-  } catch (e) {
-    console.error("Test calendar error:", e.message);
-    res.status(500).json({ error: e.message });
-  }
-});
-app.get("/test-create", async (req, res) => {
-  try {
-    const calendar = getCalendarClient();
 
-    const now = new Date();
-    const end = new Date(now.getTime() + 30 * 60000);
-
-    const event = {
-      summary: "Test desde Render",
-      start: { dateTime: now.toISOString(), timeZone: "Europe/Madrid" },
-      end: { dateTime: end.toISOString(), timeZone: "Europe/Madrid" },
-    };
-
-    const result = await calendar.events.insert({
-      calendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
-      resource: event,
-    });
-
-    res.json({ success: true, eventId: result.data.id });
-  } catch (e) {
-    console.error("Create test error:", e.message);
-    res.status(500).json({ error: e.message });
-  }
-});
 // ============================================================
 // GOOGLE OAUTH - OBTENER REFRESH TOKEN FÁCILMENTE
 // ============================================================
@@ -125,6 +97,118 @@ app.get("/auth/callback", async (req, res) => {
     <p>Copia este Refresh Token y ponlo en Render como <strong>GOOGLE_REFRESH_TOKEN</strong>:</p>
     <textarea rows="4" cols="80">${tokens.refresh_token || "No se generó refresh token - vuelve a intentarlo"}</textarea>
   `);
+});
+
+// ============================================================
+// DASHBOARD ADMIN
+// ============================================================
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+app.get("/admin", (req, res) => {
+  try {
+    const html = readFileSync(join(__dirname, "dashboard.html"), "utf8");
+    res.send(html);
+  } catch {
+    res.status(404).send("Dashboard no encontrado");
+  }
+});
+
+app.get("/admin/stats", (req, res) => {
+  res.json({
+    activeSessions: userSessions.size,
+    bookingsToday: null,
+    bookingsWeek: null,
+  });
+});
+
+app.get("/admin/bookings", async (req, res) => {
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const startOfDay = new Date(`${today}T00:00:00`);
+    const endOfDay = new Date(`${today}T23:59:59`);
+
+    const response = await getCalendarClient().events.list({
+      calendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
+      timeMin: startOfDay.toISOString(),
+      timeMax: endOfDay.toISOString(),
+      singleEvents: true,
+      orderBy: "startTime",
+    });
+
+    const bookings = (response.data.items || []).map(e => ({
+      time: new Date(e.start.dateTime).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+      clientName: e.summary?.split(" - ")[1]?.split(" (")[0] || "Cliente",
+      service: e.summary?.split(" - ")[0] || e.summary,
+      eventId: e.id,
+    }));
+
+    res.json({ bookings, weekTotal: null });
+  } catch (e) {
+    console.error("Admin bookings error:", e.message);
+    res.json({ bookings: [], weekTotal: null });
+  }
+});
+
+// ============================================================
+// ENDPOINT DE TESTING (solo para desarrollo)
+// ============================================================
+app.post("/test", async (req, res) => {
+  const { from = "34600000000", message } = req.body;
+  if (!message) return res.status(400).json({ error: "Falta el campo message" });
+  res.json({ status: "processing" });
+  await handleMessage(from, message);
+});
+
+// ============================================================
+// DASHBOARD ADMIN
+// ============================================================
+app.get("/admin", (req, res) => {
+  try {
+    const html = readFileSync(join(__dirname, "dashboard.html"), "utf8");
+    res.send(html);
+  } catch {
+    res.status(404).send("Dashboard no encontrado");
+  }
+});
+
+app.get("/admin/stats", (req, res) => {
+  res.json({
+    activeSessions: userSessions.size,
+    bookingsToday: null,
+    bookingsWeek: null,
+  });
+});
+
+app.get("/admin/bookings", async (req, res) => {
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const startOfDay = new Date(`${today}T00:00:00`);
+    const endOfDay = new Date(`${today}T23:59:59`);
+
+    const response = await getCalendarClient().events.list({
+      calendarId: process.env.GOOGLE_CALENDAR_ID || "primary",
+      timeMin: startOfDay.toISOString(),
+      timeMax: endOfDay.toISOString(),
+      singleEvents: true,
+      orderBy: "startTime",
+    });
+
+    const bookings = (response.data.items || []).map(e => ({
+      time: new Date(e.start.dateTime).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+      clientName: e.summary?.split(" - ")[1]?.split(" (")[0] || "Cliente",
+      service: e.summary?.split(" - ")[0] || e.summary,
+      eventId: e.id,
+    }));
+
+    res.json({ bookings, weekTotal: null });
+  } catch (e) {
+    console.error("Admin bookings error:", e.message);
+    res.json({ bookings: [], weekTotal: null });
+  }
 });
 
 // ============================================================
