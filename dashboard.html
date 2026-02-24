@@ -749,13 +749,14 @@
         body: JSON.stringify({ from: "admin-test", message: msg }),
       });
 
-      // Esperar respuesta del bot (aparece en logs)
-      // Como el endpoint /test responde antes de que la IA termine,
-      // esperamos un momento y mostramos la respuesta
-      await new Promise(r => setTimeout(r, 2500));
-
+      const data = await res.json();
       document.getElementById("typing-indicator")?.remove();
-      addMessage("✓ Mensaje enviado al bot. Revisa los logs de Render para ver la respuesta completa.", "bot");
+
+      if (data.reply) {
+        addMessage(data.reply, "bot");
+      } else {
+        addMessage("Sin respuesta del bot.", "bot");
+      }
     } catch {
       document.getElementById("typing-indicator")?.remove();
       addMessage("Error conectando con el bot.", "bot");
