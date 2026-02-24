@@ -160,10 +160,14 @@ app.post("/test", async (req, res) => {
     console.log(`📤 [TEST - para ${to}]: ${text}`);
   };
 
-  // Ejecutar con función interceptada
-  await handleMessageWithSend(from, message, tempSend);
+  // Ejecutar con función interceptada y esperar respuesta
+  try {
+    await handleMessageWithSend(from, message, tempSend);
+  } catch (e) {
+    console.error("Test error:", e.message);
+  }
 
-  res.json({ status: "ok", reply: botReply || "Sin respuesta" });
+  res.json({ status: "ok", reply: botReply || "Sin respuesta del bot — revisa los logs" });
 });
 
 // ============================================================
