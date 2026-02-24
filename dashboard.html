@@ -747,6 +747,7 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ from: "admin-test", message: msg }),
+        signal: AbortSignal.timeout(30000), // 30 segundos
       });
 
       const data = await res.json();
