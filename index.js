@@ -170,6 +170,12 @@ app.post("/test", async (req, res) => {
   res.json({ status: "ok", reply: botReply || "Sin respuesta del bot — revisa los logs" });
 });
 
+app.post("/test/reset", (req, res) => {
+  const { from = "admin-test" } = req.body;
+  userSessions.delete(from);
+  res.json({ status: "ok" });
+});
+
 // ============================================================
 // WHATSAPP WEBHOOK VERIFICATION
 // ============================================================
