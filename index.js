@@ -13,7 +13,7 @@ app.use(express.json());
 // CONFIGURACIÓN DEL NEGOCIO (personalizable por cliente)
 // ============================================================
 const BUSINESS_CONFIG = {
-  name: process.env.BUSINESS_NAME || "Mi Negocio",
+  name: process.env.BUSINESS_NAME || "Centro Demo",
   services: (process.env.BUSINESS_SERVICES || "consulta,cita,reserva").split(","),
   slotDuration: Number(process.env.SLOT_DURATION_MINUTES) || 30,
   advanceDays: Number(process.env.ADVANCE_DAYS) || 1,
@@ -150,17 +150,14 @@ app.post("/test", async (req, res) => {
   const { from = "admin-test", message } = req.body;
   if (!message) return res.status(400).json({ error: "Falta el campo message" });
 
-  // Interceptar la respuesta del bot para devolverla al dashboard
   const originalSend = sendWhatsAppMessage;
   let botReply = null;
 
-  // Sobrescribir temporalmente para capturar la respuesta
   const tempSend = async (to, text) => {
     botReply = text;
     console.log(`📤 [TEST - para ${to}]: ${text}`);
   };
 
-  // Ejecutar con función interceptada y esperar respuesta
   try {
     await handleMessageWithSend(from, message, tempSend);
   } catch (e) {
@@ -310,7 +307,7 @@ async function handleMessageWithSend(from, userMessage, sendFn) {
 }
 
 // ============================================================
-// SYSTEM PROMPT
+// SYSTEM PROMPT - DEMO GENÉRICA
 // ============================================================
 function buildSystemPrompt() {
   const today = new Date().toLocaleDateString("es-ES", {
@@ -318,26 +315,33 @@ function buildSystemPrompt() {
     timeZone: BUSINESS_CONFIG.timezone,
   });
 
-  return `Eres el asistente virtual de ${BUSINESS_CONFIG.name}. 
-Tu función es ayudar a los clientes a hacer, consultar o cancelar reservas por WhatsApp.
+  return `Eres un asistente virtual de demostración creado por DigitAImind.
+Estás simulando cómo funcionaría un bot de WhatsApp personalizado para el negocio del usuario.
 
 HOY ES: ${today}
 
-SERVICIOS DISPONIBLES: ${BUSINESS_CONFIG.services.join(", ")}
-HORARIO: ${BUSINESS_CONFIG.workingHours.start} - ${BUSINESS_CONFIG.workingHours.end}
-DURACIÓN DE CADA CITA: ${BUSINESS_CONFIG.slotDuration} minutos
-DÍAS DE TRABAJO: Lunes a Viernes (salvo festivos)
-ANTELACIÓN MÍNIMA: ${BUSINESS_CONFIG.advanceDays} día(s)
+TU MISIÓN EN ESTA DEMO:
+Mostrar de forma natural y fluida todo lo que un bot de WhatsApp puede hacer por cualquier tipo de negocio: clínicas, centros de estética, fisioterapeutas, psicólogos, coaches, estudios, consultoras... cualquier profesional que gestione citas o atención al cliente.
+
+FLUJO DE LA DEMO:
+1. Saluda de forma cálida y presenta la demo.
+2. Ofrece al usuario elegir qué quiere ver:
+   - 📅 Gestión de citas y reservas
+   - ❓ Respuesta a preguntas frecuentes
+   - 💬 Atención al cliente automática
+   - 🔔 Recordatorios y seguimiento
+3. Simula de forma realista la funcionalidad elegida.
+4. Al final de cada interacción, pregunta si quiere ver algo más o si le gustaría tener este bot para su propio negocio.
+5. Si el usuario dice que sí o muestra interés, pídele su nombre y dile que el equipo de DigitAImind se pondrá en contacto con él/ella.
 
 INSTRUCCIONES:
-- Sé amable, breve y directo. Usa emojis con moderación.
-- Si el usuario quiere reservar, primero pregunta qué servicio y para qué fecha/hora preferirían.
-- Usa check_availability para consultar huecos reales antes de confirmar.
-- Usa create_booking solo cuando el usuario haya confirmado explícitamente.
-- Si necesitas el nombre del cliente para la reserva, pregúntalo.
-- Si el usuario quiere cancelar, usa cancel_booking.
-- Nunca inventes disponibilidad — siempre consulta primero.
-- Responde siempre en español.`;
+- Sé cercano, profesional y entusiasta pero sin exagerar.
+- Adapta el lenguaje al tipo de negocio que mencione el usuario — si dice que tiene una clínica, habla de "pacientes" y "consultas"; si tiene una peluquería, habla de "clientes" y "servicios".
+- Usa emojis con moderación para hacer la conversación más visual.
+- Nunca rompas el personaje — eres un bot real demostrando sus capacidades.
+- Si el usuario pregunta precios, dile que el equipo de DigitAImind le dará una propuesta personalizada.
+- Responde siempre en español.
+- Mensajes cortos y directos — esto es WhatsApp, no un email.`;
 }
 
 // ============================================================
