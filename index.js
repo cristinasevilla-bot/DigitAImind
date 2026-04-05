@@ -255,7 +255,7 @@ async function handleMessageWithSend(from, userMessage, sendFn) {
 
   // Guardar nombre si se detectó
   if (nombre_detectado && !session.clientName) {
-    session.clientName = nombre_detectado;
+    session.clientName = capitalize(nombre_detectado);
   }
 
   // ── Human handoff ──────────────────────────────────────────
@@ -377,7 +377,7 @@ async function handleMessageWithSend(from, userMessage, sendFn) {
   if (session.state === "awaiting_name") {
     const words = userMessage.trim().split(/\s+/);
     if (words.length >= 1 && words.length <= 4) {
-      session.clientName = userMessage.trim();
+      session.clientName = capitalize(userMessage.trim());
       await continueBookingFlow(from, session, sendFn);
     } else {
       await sendFn(from, "¿Cómo te llamas? Solo necesito tu nombre 😊");
@@ -472,7 +472,7 @@ async function continueBookingFlow(from, session, sendFn) {
   } else {
     session.state = "awaiting_preference";
     await sendFn(from,
-      `¡Encantado/a, ${session.clientName}! 🙌\n\n` +
+      `¡Perfecto, ${session.clientName}! 🙌\n\n` +
       "¿Prefieres venir por la *mañana* (10:30-13:00) o por la *tarde* (17:00-20:00)?"
     );
   }
@@ -886,6 +886,14 @@ function formatSlotButton(slot) {
   const date = new Date(`${slot.date}T${slot.time}:00`);
   const day = date.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short", timeZone: NLT_CONFIG.timezone });
   return `${day} ${slot.time}`.slice(0, 20);
+}
+
+// ============================================================
+// CAPITALIZE
+// ============================================================
+function capitalize(str) {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
 // ============================================================
