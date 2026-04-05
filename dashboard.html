@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DigitAImind · Admin</title>
+<title>NLT · Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -18,6 +18,9 @@
     --muted: #5a7d82;
     --success: #4ade80;
     --warning: #b87333;
+    --wa-green: #25D366;
+    --wa-bubble: #1a2f1e;
+    --wa-bubble-border: #25D36622;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -47,361 +50,86 @@
     animation: fadeUp 0.5s ease;
   }
 
-  .login-logo {
-    font-size: 28px;
-    font-weight: 800;
-    letter-spacing: -1px;
-    margin-bottom: 8px;
-  }
-
+  .login-logo { font-size: 28px; font-weight: 800; letter-spacing: -1px; margin-bottom: 8px; }
   .login-logo span { color: var(--accent); }
+  .login-sub { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 12px; margin-bottom: 36px; }
 
-  .login-sub {
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    margin-bottom: 36px;
-  }
-
-  .input-group {
-    margin-bottom: 16px;
-  }
-
-  .input-group label {
-    display: block;
-    font-size: 11px;
-    font-family: 'DM Mono', monospace;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-  }
-
-  .input-group input {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 16px;
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-
+  .input-group { margin-bottom: 16px; }
+  .input-group label { display: block; font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .input-group input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 14px; outline: none; transition: border-color 0.2s; }
   .input-group input:focus { border-color: var(--accent); }
 
-  .btn-primary {
-    width: 100%;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 14px;
-    font-family: 'Syne', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: opacity 0.2s, transform 0.1s;
-  }
-
+  .btn-primary { width: 100%; background: var(--accent); color: white; border: none; border-radius: 8px; padding: 14px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 8px; transition: opacity 0.2s, transform 0.1s; }
   .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
   .btn-primary:active { transform: translateY(0); }
 
-  .login-error {
-    color: var(--accent2);
-    font-size: 12px;
-    font-family: 'DM Mono', monospace;
-    margin-top: 12px;
-    display: none;
-  }
+  .login-error { color: var(--accent2); font-size: 12px; font-family: 'DM Mono', monospace; margin-top: 12px; display: none; }
 
   /* DASHBOARD */
   #dashboard { display: none; }
 
-  .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 32px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-
-  .logo {
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-  }
-
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 32px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 10; }
+  .logo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
   .logo span { color: var(--accent); }
-
-  .topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .status-dot {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--success);
-    animation: pulse 2s infinite;
-  }
-
-  .btn-logout {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    border-radius: 6px;
-    padding: 6px 14px;
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .status-dot { display: flex; align-items: center; gap: 8px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+  .btn-logout { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 6px 14px; font-family: 'DM Mono', monospace; font-size: 12px; cursor: pointer; transition: all 0.2s; }
   .btn-logout:hover { border-color: var(--accent2); color: var(--accent2); }
 
-  .main {
-    padding: 32px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .page-title {
-    font-size: 32px;
-    font-weight: 800;
-    letter-spacing: -1px;
-    margin-bottom: 4px;
-  }
-
-  .page-sub {
-    color: var(--muted);
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    margin-bottom: 32px;
-  }
+  .main { padding: 32px; max-width: 1200px; margin: 0 auto; }
+  .page-title { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 4px; }
+  .page-sub { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 12px; margin-bottom: 32px; }
 
   /* STATS */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 32px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-    animation: fadeUp 0.4s ease both;
-  }
-
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; animation: fadeUp 0.4s ease both; }
   .stat-card:nth-child(1) { animation-delay: 0.1s; }
   .stat-card:nth-child(2) { animation-delay: 0.2s; }
   .stat-card:nth-child(3) { animation-delay: 0.3s; }
   .stat-card:nth-child(4) { animation-delay: 0.4s; }
-
-  .stat-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-  }
-
-  .stat-value {
-    font-size: 36px;
-    font-weight: 800;
-    letter-spacing: -2px;
-    line-height: 1;
-    margin-bottom: 8px;
-  }
-
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .stat-value { font-size: 36px; font-weight: 800; letter-spacing: -2px; line-height: 1; margin-bottom: 8px; }
   .stat-value.accent { color: var(--accent); }
   .stat-value.accent2 { color: var(--accent2); }
   .stat-value.success { color: var(--success); }
-
-  .stat-change {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-  }
+  .stat-change { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
 
   /* GRID */
-  .content-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-  }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    animation: fadeUp 0.5s ease both;
-  }
-
+  .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; animation: fadeUp 0.5s ease both; }
   .card:nth-child(1) { animation-delay: 0.2s; }
   .card:nth-child(2) { animation-delay: 0.3s; }
-
-  .card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .card-title {
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: -0.3px;
-  }
-
-  .card-badge {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 2px 8px;
-  }
+  .card-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+  .card-title { font-size: 14px; font-weight: 700; letter-spacing: -0.3px; }
+  .card-badge { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; }
 
   /* BOOKING LIST */
   .booking-list { padding: 0; }
-
-  .booking-item {
-    display: flex;
-    align-items: center;
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
-    gap: 16px;
-  }
-
+  .booking-item { display: flex; align-items: center; padding: 16px 24px; border-bottom: 1px solid var(--border); transition: background 0.15s; gap: 16px; }
   .booking-item:last-child { border-bottom: none; }
-  .booking-item:hover { background: rgba(124, 106, 255, 0.04); }
-
-  .booking-time {
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    color: var(--accent);
-    min-width: 52px;
-    font-weight: 500;
-  }
-
+  .booking-item:hover { background: rgba(42, 124, 138, 0.04); }
+  .booking-time { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--accent); min-width: 52px; font-weight: 500; }
   .booking-info { flex: 1; }
-
-  .booking-name {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 2px;
-  }
-
-  .booking-service {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .booking-status {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 4px;
-  }
-
-  .status-confirmed {
-    background: rgba(74, 222, 128, 0.1);
-    color: var(--success);
-    border: 1px solid rgba(74, 222, 128, 0.2);
-  }
-
-  .status-pending {
-    background: rgba(251, 191, 36, 0.1);
-    color: var(--warning);
-    border: 1px solid rgba(251, 191, 36, 0.2);
-  }
+  .booking-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .booking-service { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .booking-status { font-family: 'DM Mono', monospace; font-size: 11px; padding: 3px 10px; border-radius: 4px; }
+  .status-confirmed { background: rgba(74,222,128,0.1); color: var(--success); border: 1px solid rgba(74,222,128,0.2); }
 
   /* CONVERSATIONS */
   .conv-list { padding: 0; }
-
-  .conv-item {
-    display: flex;
-    align-items: flex-start;
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--border);
-    gap: 12px;
-    transition: background 0.15s;
-  }
-
+  .conv-item { display: flex; align-items: flex-start; padding: 16px 24px; border-bottom: 1px solid var(--border); gap: 12px; transition: background 0.15s; }
   .conv-item:last-child { border-bottom: none; }
-  .conv-item:hover { background: rgba(124, 106, 255, 0.04); }
-
-  .conv-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-
+  .conv-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
   .conv-info { flex: 1; min-width: 0; }
+  .conv-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .conv-phone { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); font-weight: 500; }
+  .conv-time { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .conv-last { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-  .conv-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 4px;
-  }
-
-  .conv-phone {
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--text);
-    font-weight: 500;
-  }
-
-  .conv-time {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .conv-last {
-    font-size: 12px;
-    color: var(--muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  /* TEST PANEL */
+  /* ═══════════════════════════════════════════
+     TEST PANEL — estilo WhatsApp
+  ═══════════════════════════════════════════ */
   .test-panel {
     margin-top: 24px;
     background: var(--surface);
@@ -412,44 +140,101 @@
     animation-delay: 0.4s;
   }
 
+  .test-panel .card-header {
+    background: #0d2426;
+  }
+
+  /* Fondo de chat tipo WA */
   .test-messages {
-    height: 200px;
+    height: 380px;
     overflow-y: auto;
-    padding: 16px 24px;
+    padding: 16px 20px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
+    background: #070f10;
+    background-image: radial-gradient(circle at 20% 80%, #0a2020 0%, transparent 50%),
+                      radial-gradient(circle at 80% 20%, #081a1c 0%, transparent 50%);
   }
 
-  .msg {
-    max-width: 70%;
-    padding: 10px 14px;
-    border-radius: 10px;
-    font-size: 13px;
-    line-height: 1.4;
-  }
-
+  /* Burbuja usuario */
   .msg-user {
+    align-self: flex-end;
     background: var(--accent);
     color: white;
-    align-self: flex-end;
-    border-bottom-right-radius: 2px;
+    padding: 9px 14px;
+    border-radius: 16px 16px 4px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    max-width: 72%;
+    word-break: break-word;
   }
 
+  /* Burbuja bot — estilo WA */
   .msg-bot {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
     align-self: flex-start;
-    border-bottom-left-radius: 2px;
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
+    background: #0f2426;
+    border: 1px solid #1a3a3e;
+    color: var(--text);
+    padding: 9px 14px;
+    border-radius: 4px 16px 16px 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    max-width: 78%;
+    word-break: break-word;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
+  /* Texto bold de WhatsApp */
+  .msg-bot strong { font-weight: 700; color: #c8e8ea; }
+
+  /* Botones interactivos WA simulados */
+  .wa-buttons {
+    align-self: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 2px;
+    max-width: 78%;
+  }
+
+  .wa-btn {
+    background: #0f2426;
+    border: 1px solid var(--accent);
+    color: var(--accent-light);
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    letter-spacing: 0.2px;
+  }
+
+  .wa-btn:hover {
+    background: rgba(42, 124, 138, 0.2);
+    transform: translateY(-1px);
+  }
+
+  .wa-btn:active {
+    transform: translateY(0);
+    background: rgba(42, 124, 138, 0.35);
+  }
+
+  .wa-btn.used {
+    opacity: 0.4;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  /* Input área */
   .test-input-area {
     display: flex;
     gap: 0;
     border-top: 1px solid var(--border);
+    background: #0a1a1c;
   }
 
   .test-input {
@@ -479,25 +264,14 @@
 
   .btn-send:hover { opacity: 0.85; }
 
-  /* ANIMATIONS */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
+  /* Typing indicator */
   .typing {
     display: flex;
     gap: 4px;
     padding: 10px 14px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    border-bottom-left-radius: 2px;
+    background: #0f2426;
+    border: 1px solid #1a3a3e;
+    border-radius: 4px 16px 16px 16px;
     align-self: flex-start;
     width: fit-content;
   }
@@ -513,10 +287,10 @@
   .typing span:nth-child(2) { animation-delay: 0.2s; }
   .typing span:nth-child(3) { animation-delay: 0.4s; }
 
-  @keyframes bounce {
-    0%, 60%, 100% { transform: translateY(0); }
-    30% { transform: translateY(-6px); }
-  }
+  /* ANIMATIONS */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
 </style>
 </head>
 <body>
@@ -524,8 +298,8 @@
 <!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo">Digit<span>AI</span>mind</div>
-    <div class="login-sub">// admin panel · booking bot</div>
+    <div class="login-logo">Next<span>Level</span> Training</div>
+    <div class="login-sub">// panel de administración · bot whatsapp</div>
     <div class="input-group">
       <label>Usuario</label>
       <input type="text" id="username" placeholder="admin" />
@@ -542,7 +316,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard">
   <div class="topbar">
-    <div class="logo">Digit<span>AI</span>mind <span style="color:var(--muted);font-size:13px;font-weight:400">/ admin</span></div>
+    <div class="logo">Next<span>Level</span> Training <span style="color:var(--muted);font-size:13px;font-weight:400">/ admin bot</span></div>
     <div class="topbar-right">
       <div class="status-dot">
         <div class="dot"></div>
@@ -559,7 +333,7 @@
     <!-- STATS -->
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-label">Reservas hoy</div>
+        <div class="stat-label">Visitas hoy</div>
         <div class="stat-value accent" id="stat-today">—</div>
         <div class="stat-change">desde Google Calendar</div>
       </div>
@@ -582,29 +356,23 @@
 
     <!-- CONTENT -->
     <div class="content-grid">
-      <!-- RESERVAS HOY -->
       <div class="card">
         <div class="card-header">
-          <div class="card-title">Reservas de hoy</div>
+          <div class="card-title">Visitas de hoy</div>
           <div class="card-badge" id="bookings-count">cargando...</div>
         </div>
         <div class="booking-list" id="bookings-list">
-          <div style="padding:24px;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;text-align:center">
-            Cargando reservas...
-          </div>
+          <div style="padding:24px;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;text-align:center">Cargando reservas...</div>
         </div>
       </div>
 
-      <!-- CONVERSACIONES -->
       <div class="card">
         <div class="card-header">
           <div class="card-title">Conversaciones recientes</div>
           <div class="card-badge" id="convs-count">—</div>
         </div>
         <div class="conv-list" id="convs-list">
-          <div style="padding:24px;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;text-align:center">
-            Sin conversaciones aún
-          </div>
+          <div style="padding:24px;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;text-align:center">Sin conversaciones aún</div>
         </div>
       </div>
     </div>
@@ -612,14 +380,12 @@
     <!-- TEST PANEL -->
     <div class="test-panel">
       <div class="card-header">
-        <div class="card-title">🧪 Test del bot</div>
-        <div class="card-badge" onclick="resetChat()" style="cursor:pointer">↺ reiniciar</div>
+        <div class="card-title">🧪 Test del bot — simulador WhatsApp</div>
+        <div class="card-badge" onclick="resetChat()" style="cursor:pointer;user-select:none">↺ reiniciar</div>
       </div>
-      <div class="test-messages" id="test-messages">
-        <div class="msg msg-bot">Hola! Soy el bot de reservas. ¿En qué puedo ayudarte?</div>
-      </div>
+      <div class="test-messages" id="test-messages"></div>
       <div class="test-input-area">
-        <input class="test-input" id="test-input" placeholder="Escribe un mensaje de prueba..." onkeydown="if(event.key==='Enter') sendTest()" />
+        <input class="test-input" id="test-input" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter') sendTest()" />
         <button class="btn-send" onclick="sendTest()">Enviar →</button>
       </div>
     </div>
@@ -627,16 +393,11 @@
 </div>
 
 <script>
-  // ============================================================
-  // CONFIG — cambia esto
-  // ============================================================
   const ADMIN_USER = "admin";
-  const ADMIN_PASS = "digitaimind2024";
-  const BOT_URL = ""; // vacío = mismo servidor
+  const ADMIN_PASS = "nlt2025admin";
+  const BOT_URL = "";
 
-  // ============================================================
-  // LOGIN
-  // ============================================================
+  // ── LOGIN ─────────────────────────────────────────────────
   function login() {
     const user = document.getElementById("username").value;
     const pass = document.getElementById("password").value;
@@ -656,48 +417,33 @@
     document.getElementById("password").value = "";
   }
 
-  // ============================================================
-  // DASHBOARD INIT
-  // ============================================================
+  // ── DASHBOARD ─────────────────────────────────────────────
   function initDashboard() {
     const now = new Date();
     document.getElementById("today-date").textContent =
-      `// ${now.toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}`;
-
+      `// ${now.toLocaleDateString("es-ES", { weekday:"long", year:"numeric", month:"long", day:"numeric" })}`;
     loadStats();
     loadBookings();
+    addBotMessage("¡Hola! Bienvenido/a a *Next Level Training* 💪\n\n¿En qué puedo ayudarte?\n\n📅 Reservar visita al centro\n❓ Preguntas sobre horarios, precios o clases\n🗓️ Modificar o cancelar una visita");
   }
 
-  // ============================================================
-  // STATS
-  // ============================================================
+  // ── STATS ─────────────────────────────────────────────────
   async function loadStats() {
     try {
       const res = await fetch(`${BOT_URL}/admin/stats`);
-      if (!res.ok) throw new Error();
       const data = await res.json();
-      document.getElementById("stat-today").textContent = data.bookingsToday ?? "—";
-      document.getElementById("stat-week").textContent = data.bookingsWeek ?? "—";
       document.getElementById("stat-convs").textContent = data.activeSessions ?? "—";
       document.getElementById("convs-count").textContent = `${data.activeSessions ?? 0} activas`;
-    } catch {
-      document.getElementById("stat-today").textContent = "—";
-      document.getElementById("stat-week").textContent = "—";
-      document.getElementById("stat-convs").textContent = "—";
-    }
+    } catch {}
   }
 
-  // ============================================================
-  // BOOKINGS
-  // ============================================================
   async function loadBookings() {
     try {
       const res = await fetch(`${BOT_URL}/admin/bookings`);
-      if (!res.ok) throw new Error();
       const data = await res.json();
       renderBookings(data.bookings || []);
-      document.getElementById("bookings-count").textContent = `${(data.bookings || []).length} reservas`;
-      document.getElementById("stat-today").textContent = (data.bookings || []).length;
+      document.getElementById("bookings-count").textContent = `${(data.bookings||[]).length} visitas`;
+      document.getElementById("stat-today").textContent = (data.bookings||[]).length;
       document.getElementById("stat-week").textContent = data.weekTotal ?? "—";
     } catch {
       renderBookings([]);
@@ -708,7 +454,7 @@
   function renderBookings(bookings) {
     const el = document.getElementById("bookings-list");
     if (!bookings.length) {
-      el.innerHTML = `<div style="padding:32px;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;text-align:center">Sin reservas hoy 🎉</div>`;
+      el.innerHTML = `<div style="padding:32px;color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;text-align:center">Sin visitas hoy 🎉</div>`;
       return;
     }
     el.innerHTML = bookings.map(b => `
@@ -716,70 +462,139 @@
         <div class="booking-time">${b.time}</div>
         <div class="booking-info">
           <div class="booking-name">${b.clientName || "Cliente"}</div>
-          <div class="booking-service">${b.service}</div>
+          <div class="booking-service">Visita informativa · NLT</div>
         </div>
         <div class="booking-status status-confirmed">confirmada</div>
-      </div>
-    `).join("");
+      </div>`).join("");
   }
 
-  // ============================================================
-  // TEST BOT
-  // ============================================================
+  // ── RENDER MARKDOWN WHATSAPP ──────────────────────────────
+  // Convierte *texto* → <strong>, _texto_ → <em>, saltos de línea → <br>
+  function renderWAMarkdown(text) {
+    // Escapar HTML primero
+    let safe = text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    // *negrita*
+    safe = safe.replace(/\*([^*\n]+)\*/g, "<strong>$1</strong>");
+    // _cursiva_
+    safe = safe.replace(/_([^_\n]+)_/g, "<em>$1</em>");
+    // Saltos de línea
+    safe = safe.replace(/\n/g, "<br>");
+    return safe;
+  }
+
+  // ── DETECTAR BOTONES EN RESPUESTA ─────────────────────────
+  // Si el texto contiene "*1.*", "*2.*", "*3.*" → extraer y crear botones WA
+  function extractButtons(text) {
+    const btnRegex = /\*([123])\.\*\s*([^\n*]+)/g;
+    const buttons = [];
+    let match;
+    while ((match = btnRegex.exec(text)) !== null) {
+      buttons.push({ id: `op_${match[1]}`, label: match[2].trim() });
+    }
+    return buttons;
+  }
+
+  // ── AÑADIR MENSAJE BOT ────────────────────────────────────
+  function addBotMessage(text) {
+    const container = document.getElementById("test-messages");
+    const buttons = extractButtons(text);
+
+    // Burbuja texto
+    const bubble = document.createElement("div");
+    bubble.className = "msg-bot";
+    bubble.innerHTML = renderWAMarkdown(text);
+    container.appendChild(bubble);
+
+    // Si hay botones → renderizarlos debajo
+    if (buttons.length > 0) {
+      const btnGroup = document.createElement("div");
+      btnGroup.className = "wa-buttons";
+      buttons.forEach(b => {
+        const btn = document.createElement("button");
+        btn.className = "wa-btn";
+        btn.textContent = b.label;
+        btn.onclick = () => {
+          // Deshabilitar todos los botones del grupo
+          btnGroup.querySelectorAll(".wa-btn").forEach(x => x.classList.add("used"));
+          // Simular click del usuario
+          simulateUserClick(b.id, b.label);
+        };
+        btnGroup.appendChild(btn);
+      });
+      container.appendChild(btnGroup);
+    }
+
+    scrollMessages();
+  }
+
+  // ── SIMULAR CLICK EN BOTÓN ────────────────────────────────
+  async function simulateUserClick(id, label) {
+    const container = document.getElementById("test-messages");
+
+    // Mostrar como mensaje usuario
+    const userBubble = document.createElement("div");
+    userBubble.className = "msg-user";
+    userBubble.textContent = label;
+    container.appendChild(userBubble);
+    scrollMessages();
+
+    // Enviar el ID al bot
+    await sendMessageToBot(id);
+  }
+
+  // ── TEST CHAT ─────────────────────────────────────────────
   function resetChat() {
-    document.getElementById("test-messages").innerHTML =
-      '<div class="msg msg-bot">Hola! Soy el bot de reservas. ¿En qué puedo ayudarte?</div>';
+    document.getElementById("test-messages").innerHTML = "";
     fetch(`${BOT_URL}/test/reset`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ from: "admin-test" }),
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ from:"admin-test" }),
     });
+    addBotMessage("¡Hola! Bienvenido/a a *Next Level Training* 💪\n\n¿En qué puedo ayudarte?\n\n📅 Reservar visita al centro\n❓ Preguntas sobre horarios, precios o clases\n🗓️ Modificar o cancelar una visita");
   }
 
   async function sendTest() {
     const input = document.getElementById("test-input");
     const msg = input.value.trim();
     if (!msg) return;
-
     input.value = "";
-    addMessage(msg, "user");
+
+    // Burbuja usuario
+    const container = document.getElementById("test-messages");
+    const userBubble = document.createElement("div");
+    userBubble.className = "msg-user";
+    userBubble.textContent = msg;
+    container.appendChild(userBubble);
+    scrollMessages();
+
+    await sendMessageToBot(msg);
+  }
+
+  async function sendMessageToBot(msg) {
+    const container = document.getElementById("test-messages");
 
     // Typing indicator
     const typing = document.createElement("div");
     typing.className = "typing";
-    typing.innerHTML = "<span></span><span></span><span></span>";
     typing.id = "typing-indicator";
-    document.getElementById("test-messages").appendChild(typing);
+    typing.innerHTML = "<span></span><span></span><span></span>";
+    container.appendChild(typing);
     scrollMessages();
 
     try {
       const res = await fetch(`${BOT_URL}/test`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ from: "admin-test", message: msg }),
-        signal: AbortSignal.timeout(30000), // 30 segundos
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ from:"admin-test", message: msg }),
+        signal: AbortSignal.timeout(30000),
       });
-
       const data = await res.json();
       document.getElementById("typing-indicator")?.remove();
-
-      if (data.reply) {
-        addMessage(data.reply, "bot");
-      } else {
-        addMessage("Sin respuesta del bot.", "bot");
-      }
+      addBotMessage(data.reply || "Sin respuesta del bot.");
     } catch {
       document.getElementById("typing-indicator")?.remove();
-      addMessage("Error conectando con el bot.", "bot");
+      addBotMessage("❌ Error conectando con el bot.");
     }
-  }
-
-  function addMessage(text, type) {
-    const el = document.createElement("div");
-    el.className = `msg msg-${type}`;
-    el.textContent = text;
-    document.getElementById("test-messages").appendChild(el);
-    scrollMessages();
   }
 
   function scrollMessages() {
